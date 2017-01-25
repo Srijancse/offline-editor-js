@@ -1,5 +1,118 @@
 # offline-editor-js - Changelog
 
+## Version 3.7.0 - Nov 1, 2016
+
+No breaking changes.
+
+**Enhancements**
+* Closes #491 - better handling of OBJECTID when returning online
+* Closes #492 - it's working again, no clue why. No fix. Could be how JSON is being returned from AGOL.
+
+
+## Version 3.6.0 - October 17, 2016
+
+No breaking changes.
+
+**Enhancements**
+* Closes #487 - missing libraries in offline-tpk-src.js
+* Closes #488 - fix package.json SPDX license expression. Pretty much only affects the latest versions of grunt-cli.
+
+
+## Version 3.5.0 - September 15, 2016
+
+Possible breaking changes. Changes to database storage pattern.
+
+**Enhancements**
+* Added compression to the tiles database URL field, resulting in approximately 50% reduction in that field's size. This will make the largest difference when storing thousands of tiles.
+* Closes #482 - clarify tile reporting in simple-tiles.html sample app.
+* Minor doc updates.
+
+## Version 3.4.0 - September 13, 2016
+
+Possible breaking changes. Changes to database storage pattern.
+
+**Enhancements**
+* Added base64 re-encoding to the tile database that results in a 2.7x (16/6) reduction in storage size.
+
+**Known Issues**
+* Firefox v48.x is showing tiles as hidden when they should be visible. This issue existed at v3.3.2.
+
+
+## Version 3.3.2 - August 24, 2016
+
+No breaking changes. 
+
+**Enhancements**
+* Updated old class names in howtousetiles.md. 
+
+## Version 3.3.1 - June 12, 2016
+
+No breaking changes.
+
+**Enhancements**
+* Adds an ISSUE_TEMPLATE
+
+## Version 3.3.0 - June 12, 2016
+
+No breaking changes.
+
+**Enhancements**
+* Closes #473 - offline edits breaking when special characters such as "&" are used within attribute values.
+
+## Changed deprecation notice to Maintenance Mode notice - June 1, 2016
+
+Per several requests, this hopefully clarifies that the library is still being maintained and not being 
+removed.
+
+## Deprecation details - May 23, 2016
+
+For details and comments on the deprecation refer to this [issue](https://github.com/Esri/offline-editor-js/issues/468).
+
+## Deprecation Notice - May 16, 2016
+
+This project is now deprecated. No new functionality will be added.
+
+## Version 3.2.0 - May 11, 2016
+
+No breaking changes. 
+
+**Enhancements**
+* Added CleanFeatureService.js util for deleting all features in a demo feature service
+
+**Bug Fixes**
+* Closes #461 - proxyPath not respected in OfflineEditAdvanced. Also fixed proxyPath in OfflineEditBasic
+* Closes #462 - getNextLowestTempId does not exist in editStorePOLS.
+* Closes #463 - sample feature service no longer allows editing. Complete rewrite.
+
+## Version 3.1.0 - April 21, 2016
+
+No breaking changes.
+
+**Bug Fixes**
+* Closes #458 - old prototype extension causing breaking failures.
+
+## Version 3.0.7 - April 14, 2016
+
+No breaking changes.
+
+**Bug fixes**
+* Closes #454 Broken gh-pages link
+* Closes #455 Edit spec throwing error on deprecated unit test
+
+**Enhancements**
+* Updated copyright year from 2015 to 2016
+
+## Version 3.0.6 - March 30, 2016
+
+No breaking changes
+
+**Bug Fixes**
+* Closes #448 - OfflineEditAdvanced - after multiple offline restarts, UID begins at -1 again for Adds.
+
+**Enhancements**
+* Closes #451 - OfflineTiles - Option for offline_id_manager localStorage key name
+* Updates to howtousetiles.md documentation for the offlineIdManager parameter.
+
 ## Version 3.0.5 - Feb 2, 2016
 
 No breaking changes. Documentation updates only.

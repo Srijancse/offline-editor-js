@@ -1,9 +1,9 @@
 offline-editor-js
 =================
 
-Offline-editor-js is a family of libraries for building offline capabilities into web mapping applications. It's specifically designed to work with the ArcGIS API for JavaScript and ArcGIS Online. With these libraries you can store feature edits, attachments, map tiles and TPKs (Tile Packages). 
+**Maintenance Mode** As of May 1, 2016 no new functionality will be added to this project. For additional details refer to this [issue](https://github.com/Esri/offline-editor-js/issues/468).
 
-***IMPORTANT:*** If you need a fully integrated, robust offline solution then you should be using our native ArcGIS Runtime SDKs for .NET, WPF, Java, iOS, Android and Qt.
+If you need a fully integrated, robust offline solution that's officially supported, then please refer to our native [ArcGIS Runtime SDKs](https://developers.arcgis.com/arcgis-runtime/) for iOS, Android, .NET, Xamarin, Java, OSx and Qt.
 
 # Getting Started
 
@@ -16,9 +16,11 @@ This project is also available on npm: **[https://www.npmjs.com/package/esri-off
 
 This repo contains the following libraries in the `/dist` directory. The use of `basic` in the name indicates intermittent offline-only, and `advanced` indicates the library can be used for both intermittent and full offline. 
 
+Reference URLs are provided for developement only. It's recommended to use a CDN or host your own.
+
 Use_Case | Name, Description and gh-pages URL
 --- | ---
-Basic editing | **`offline-edit-basic-min.js`** Simple, lightweight *(14k minimized)* offline editing library that automatically caches adds, updates and deletes when the internet is temporarily interrupted.<br><br>[`http://esri.github.io/offline-editor-js/dist/offline-edit-basic-min.js`](http://esri.github.io/offline-editor-js/dist/offline-edit-basic-min.js)
+Basic editing | **`offline-edit-basic-min.js`** Simple, lightweight *(15k minimized)* offline editing library that automatically caches adds, updates and deletes when the internet is temporarily interrupted.<br><br>[`http://esri.github.io/offline-editor-js/dist/offline-edit-basic-min.js`](http://esri.github.io/offline-editor-js/dist/offline-edit-basic-min.js)
 Advanced editing | **`offline-edit-advanced-min.js`** Used for intermittent and full offline editing workflows. Also includes limited support for attachments. <br><br>[`http://esri.github.io/offline-editor-js/dist/offline-edit-advanced-min.js`](http://esri.github.io/offline-editor-js/dist/offline-edit-advanced-min.js)
 Basic map tiles |  **`offline-tiles-basic-min.js`** Caches map tiles for simple, intermittent-only offline workflows. Use this library with ArcGIS Online Web maps as well as with tiled map services.<br><br> [`http://esri.github.io/offline-editor-js/dist/offline-tiles-basic-min.js`](http://esri.github.io/offline-editor-js/dist/offline-tiles-basic-min.js) 
 Advanced map tiles | **`offline-tiles-advanced-min.js`** Used for intermittent and full offline tile caching. Extends any ArcGIS Tiled Map Service. This library should be used in conjunction with an HTML5 Application Cache Manifest coding pattern.<br><br>[`http://esri.github.io/offline-editor-js/dist/offline-tiles-advanced-min.js`](http://esri.github.io/offline-editor-js/dist/offline-tiles-advanced-min.js)
@@ -83,7 +85,7 @@ Go __[here](https://github.com/Esri/offline-editor-js/wiki/FAQ)__ for answers to
 
 ##Dependencies
 
-* [ArcGIS API for JavaScript (v3.12+)](https://developers.arcgis.com/javascript/)
+* [ArcGIS API for JavaScript (v3.14+)](https://developers.arcgis.com/javascript/)
 * [Offline.js](http://github.hubspot.com/offline/docs/welcome/) - it allows detection of the online/offline condition and provides events to hook callbacks on when this condition changes
 * Node.js required for building the source
 * [IndexedDBShim](https://github.com/axemclion/IndexedDBShim) - polyfill to simulate indexedDB functionality in browsers/platforms where it is not supported notably older versions desktop Safari and iOS Safari.
@@ -113,7 +115,7 @@ Anyone and everyone is welcome to contribute. Please see our [guidelines for con
 
 
 ## Licensing
-Copyright 2015 Esri
+Copyright 2016 Esri
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

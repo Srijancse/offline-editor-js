@@ -7,7 +7,7 @@ The `tiles` library allows a developer to extend a tiled layer with offline supp
 
 There are two primary approaches to using this set of libraries. The first approaches is for intermittent offline use cases where you only expect occasional and temporary internet outages and you don't need to worry about restarting the application while offline. The first approach works with both an `ArcGISTiledMapServiceLayer` and ArcGIS.com Web maps.
 
-The second approach is if you need to be able to restart or reload your application offline and only works with `ArcGISTiledMapServiceLayer`.
+The second approach is if you need to be able to restart or reload your application offline and only works with `ArcGISTiledMapServiceLayer`.  *You must use this approach if your tiled layer uses token-based security.*
 
 For detecting whether the browser is online, offline or listen for connection changes we recommend the [Offline.js](http://github.hubspot.com/offline/docs/welcome/) library.
 
@@ -91,7 +91,7 @@ Deletes all tiles stored in the indexed db database.
 The callback is called to indicate success (true) or failure (false,err)
 
 ####basemap.getOfflineUsage(callback)
-It calculates the number of tiles that are stored in the indexed db database and the space used by them. The callback is called with an object containing the result of this calculation:
+It calculates the number of tiles that are stored in the indexed db database and the space used by them. Because the library uses compression, the database size will be significantly smaller than the downloaded tiles size. The callback is called with an object containing the result of this calculation:
 
 ```js
 	{
@@ -146,13 +146,13 @@ This approach is best if you have requirements for restarting or reloading your 
 	});
 ```
 
-**Step 2** Create a new instance of `OfflineTileEnablerLayer`. Note, when you instantiate the `Map` leave off the `basemap` property because we are adding a customer tile layer as our basemap. `OfflineTileEnablerLayer` has three properties in the constructor. The first is the REST endpoint of the basemap you want to use, the second is the callback and the last is an optional parameter to preset the layer as online or offline. This will help with with drawing tiles correctly during offline restarts or reloads.
+**Step 2** Create a new instance of `OfflineTileAdvanced`. Note, when you instantiate the `Map` leave off the `basemap` property because we are adding a customer tile layer as our basemap. `OfflineTileAdvanced` has four parameters in the [constructor](https://github.com/Esri/offline-editor-js/blob/master/doc/offlinetilesadvanced.md#constructor). The first is the REST endpoint of the basemap you want to use, the second is the callback, the third is a state property to preset the layer as online or offline, and the fourth is an optional parameter to set a custom object store. This will help with with drawing tiles correctly during offline restarts or reloads.
 
-IMPORTANT: If you are trying to use a non-CORS-enabled Feature Service you will need to explicity declare your `proxyPath`. We've set `proxyPath` to `null` here just as an illustration. You don't need to do that since its default is `null`.
+IMPORTANT: If you are trying to use a non-CORS-enabled Feature Service you will need to explicity declare your `proxyPath`. We've set `proxyPath` to `null` here just as an illustration, but it's not required.
 
 ```js
 
-    tileLayer = new O.esri.Tiles.OfflineTileEnablerLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",function(evt){
+    tileLayer = new O.esri.Tiles.OfflineTilesAdvanced("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",function(evt){
         console.log("Tile Layer Loaded.");
         // All non-CORS-enabled Feature Services require a proxy.
         // You can set the property here if needed.
@@ -171,7 +171,7 @@ IMPORTANT: If you are trying to use a non-CORS-enabled Feature Service you will 
 
 ```
 
-All map events will continue to work normally. Although some methods that are typically available will now have to be accessed through `OfflineTileEnablerLayer` such as `getLevel()`, `getMaxZoom()`, and `getMinZoom()`.
+All map events will continue to work normally. Although some methods that are typically available will now have to be accessed through `OfflineTilesAdvanced` such as `getLevel()`, `getMaxZoom()`, and `getMinZoom()`.
 
 To get the current extent you will need to monitor the `zoom-end` and `pan-end` events like this:
 
@@ -188,9 +188,9 @@ To get the current extent you will need to monitor the `zoom-end` and `pan-end` 
 
 ```
 
-## Specifying a custom database and dataStore name
+## Specifying a custom database, dataStore name, and Offline Tiles Id Manager name
 
-Both `OfflineTilesAdvanced` and `OfflineTilesBasic` have an optional property that allows you to specify your own database name and dataStore name.
+Both `OfflineTilesAdvanced` and `OfflineTilesBasic` have an optional property that allows you to specify your own database name, dataStore name, and offline tile ID manager name.
 
 For OfflineTilesBasic you can use the following pattern within the `extend()` method:
 
@@ -212,13 +212,14 @@ For OfflineTilesBasic you can use the following pattern within the `extend()` me
 
 ```
 
-For OfflineTilesAdvanced use this pattern in the constructor:
+For OfflineTilesAdvanced use this pattern in the constructor.  Note that the Advanced approach also supports token-based security, so an optional ```offlineIdManager``` can also be specified.
 
 ```js
 
     var dbConfig = {
         dbName : "TILES_TEST",
-        objectStoreName : "TILES"
+        objectStoreName : "TILES",
+        offlineIdManager: "TILES_ID_MANAGER"
     }
 
     tileLayer = new O.esri.Tiles.OfflineTilesAdvanced("http://xyz",function(evt){
@@ -236,12 +237,14 @@ In the constructor for `OfflineTilesAdvanced` and in the `extend()` method for `
 
 If you are using a secure tiled map service then you'll need to use the `OfflineTilesAdvanced` library. There isn't anything special you need to do, the library should automatically recognize you are using a secure service and it will trigger `esri/IdentityManager` if it cannot find valid credentials.
 
-The library manually stores credential information using the following localStorage pattern: `window.localStorage.offline_id_manager`.
+The library manually stores credential information using the following localStorage pattern: ```window.localStorage[offlineIdManager```.  If you do not specify the ```offlineIdManager``` parameter in the ```dbConfig``` constructor parameter, a default value of `window.localStorage.offline_id_manager` will be assigned.
 
 If you are using an optimized version of the ArcGIS API for JavaScript make sure you include the `esri/IdentityManager` module.
 
 ## Browser storage limitations
 
 Our general guideline for the amount of total storage you can use on a device is be between 50MBs and 100MBs. If you need greater storage than that you'll need to either switch to a hybrid model (e.g. PhoneGap) or use one of our native ArcGIS Runtime SDKs. The Runtime SDKs have fully supported and robust offline capabilities that go beyond what JavaScript is currently capable of.
+
+The library helps where it can by providing 2.7x compression of the tile imagery and about 50% compression of the tile URLs. 
 
 Some developers have mentioned that they have stored alot more than 100MBs. How much you can store varies between devices and browsers. Every mobile operating system sets a limit on how much memory a single application can use. Since web apps are dependant on the browser, which is a web app, if it consumes too much memory the operating system will simply kill the browser. Poof and it's gone. So, web apps are dependant on a variety of things including how many other browser tabs are open, browser memory leakage especially if it's been running for a long time, other storage being used such as feature edits, the application cache and the general browser cache.

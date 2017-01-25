@@ -33,6 +33,8 @@ module.exports = function(grunt) {
                     'lib/tiles/OfflineTilesNS.js',
                     'lib/tiles/TilesCore.js',
                     'lib/tiles/TilesStore.js',
+                    'lib/tiles/base64string.js',
+                    'lib/stiles/lzString.js',
                     'lib/tiles/tilingScheme.js',
                     'lib/tpk/autoCenterMap.js',
                     'lib/tpk/OfflineTpkNS.js',
@@ -74,6 +76,8 @@ module.exports = function(grunt) {
                     'lib/tiles/OfflineTilesBasic.js',
                     'lib/tiles/OfflineTilesNS.js',
                     'lib/tiles/base64utils.js',
+                    'lib/tiles/base64string.js',
+                    'lib/tiles/lzString.js',
                     'lib/tiles/FileSaver.js',
                     'lib/tiles/TilesCore.js',
                     'lib/tiles/TilesStore.js',
@@ -87,6 +91,8 @@ module.exports = function(grunt) {
                     'lib/tiles/OfflineTilesAdvanced.js',
                     'lib/tiles/OfflineTilesNS.js',
                     'lib/tiles/base64utils.js',
+                    'lib/tiles/base64string.js',
+                    'lib/tiles/lzString.js',
                     'lib/tiles/FileSaver.js',
                     'lib/tiles/TilesCore.js',
                     'lib/tiles/TilesStore.js',
@@ -100,6 +106,8 @@ module.exports = function(grunt) {
                     'lib/tpk/TPKLayer.js',
                     'lib/tpk/OfflineTpkNS.js',
                     'lib/tiles/TilesStore.js',
+                    'lib/tiles/lzString.js',
+                    'lib/tiles/base64String.js',
                     'lib/tpk/zip.js',
                     'lib/tpk/autoCenterMap.js',
                     'lib/tpk/inflate.js',
@@ -117,7 +125,7 @@ module.exports = function(grunt) {
                 beautify: {
                     semicolons: false //Required: prevents dojo parser errors w/ minified files in this project
                 },
-                preserveComments: 'some',
+                preserveComments: /^!/,
                 wrap: false
 //                mangle: {
 //                    except: ['O']

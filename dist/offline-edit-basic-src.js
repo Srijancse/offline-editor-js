@@ -1,5 +1,5 @@
-/*! esri-offline-maps - v3.0.3 - 2015-11-30
-*   Copyright (c) 2015 Environmental Systems Research Institute, Inc.
+/*! esri-offline-maps - v3.7.0 - 2016-11-01
+*   Copyright (c) 2016 Environmental Systems Research Institute, Inc.
 *   Apache License*/
 // Configure offline/online detection
 // Requires: http://github.hubspot.com/offline/docs/welcome/
@@ -40,8 +40,9 @@ define([
                 _onlineStatus: "online",
                 _featureLayers: {},
                 _editStore: new O.esri.Edit.EditStorePOLS(),
-                _defaultXhrTimeout: 15000, // ms
+                _defaultXhrTimeout: 15000,      // ms
                 _autoOfflineDetect: true,
+                _esriFieldTypeOID: "",          // Determines the correct casing for objectid. Some feature layers use different casing
 
                 ONLINE: "online",				// all edits will directly go to the server
                 OFFLINE: "offline",             // edits will be enqueued
@@ -91,6 +92,14 @@ define([
                     // how esri.Graphics assign a unique ID to a graphic. If it is not, then this
                     // library will break and we'll have to re-architect how it manages UIDs.
                     layer.objectIdField = this.DB_UID;
+
+                    // NOTE: set the casing for the feature layers objectid.
+                    for(var i = 0; i < layer.fields.length; i++){
+                        if(layer.fields[i].type === "esriFieldTypeOID"){
+                            this._esriFieldTypeOID = layer.fields[i].name;
+                            break;
+                        }
+                    }
 
                     var url = null;
 
@@ -501,10 +510,7 @@ define([
                         }, this);
                         return files;
                     };
-
-                    // we need to identify ADDs before sending them to the server
-                    // we assign temporary ids (using negative numbers to distinguish them from real ids)
-                    layer._nextTempId = -1;
+                    
                     layer._getNextTempId = function () {
                         return this._nextTempId--;
                     };
@@ -512,20 +518,39 @@ define([
                     // We are currently only passing in a single deferred.
                     all(extendPromises).then(function (r) {
 
-                        if(self._autoOfflineDetect){
-                            Offline.on('up', function(){ // jshint ignore:line
+                        if(r[0].success){
 
-                                self.goOnline(function(success,error){ // jshint ignore:line
-                                    console.log("GOING ONLINE");
+                            // we need to identify ADDs before sending them to the server
+                            // we assign temporary ids (using negative numbers to distinguish them from real ids)
+                            // query the database first to find any existing offline adds, and find the next lowest integer to start with.
+                            self._editStore.getNextLowestTempId(layer, function(value, status){
+                                if(status === "success"){
+                                    layer._nextTempId = value;
+                                }
+                                else{
+                                    console.log("Set _nextTempId not found: " + value + ", resetting to -1");
+                                    layer._nextTempId = -1;
+                                }
+                            });
+
+                            if(self._autoOfflineDetect){
+                                Offline.on('up', function(){ // jshint ignore:line
+
+                                    self.goOnline(function(success,error){ // jshint ignore:line
+                                        console.log("GOING ONLINE");
+                                    });
                                 });
-                            });
 
-                            Offline.on('down', function(){ // jshint ignore:line
-                               self.goOffline(); // jshint ignore:line
-                            });
+                                Offline.on('down', function(){ // jshint ignore:line
+                                    self.goOffline(); // jshint ignore:line
+                                });
+                            }
+
+                            callback(true, null);
                         }
-
-                        callback(true, null);
+                        else {
+                            callback(false, r[0].error);
+                        }
                     });
 
                 }, // extend
@@ -820,7 +845,29 @@ define([
                     this._makeEditRequest(layer, adds, updates, deletes,
                         function (addResults, updateResults, deleteResults) {
 
+                            // addResults present a special case for handling objectid
                             if(addResults.length > 0) {
+
+                                var objectid = "";
+
+                                if(addResults[0].hasOwnProperty("objectid")){
+                                    objectid = "objectid";
+                                }
+
+                                if(addResults[0].hasOwnProperty("objectId")){
+                                    objectid = "objectId";
+                                }
+
+                                if(addResults[0].hasOwnProperty("OBJECTID")){
+                                    objectid = "OBJECTID";
+                                }
+
+                                // ??? These are the most common objectid values. I may have missed some!
+
+                                // Some feature layers will return different casing such as: 'objectid', 'objectId' and 'OBJECTID'
+                                // Normalize these values to the feature type OID so that we don't break other aspects
+                                // of the JS API.
+                                adds[0].attributes[that._esriFieldTypeOID] = addResults[0][objectid];
                                 var graphic = new Graphic(adds[0].geometry,null,adds[0].attributes);
                                 layer.add(graphic);
                             }
@@ -928,7 +975,7 @@ define([
                                 delete add.infoTemplate; // delete it to reduce payload size.
                             }
                         }, this);
-                        a = "&adds=" + JSON.stringify((adds));
+                        a = "&adds=" + encodeURIComponent(JSON.stringify(adds));
                     }
                     if(updates.length > 0) {
                         array.forEach(updates, function(update){
@@ -936,7 +983,7 @@ define([
                                 delete update.infoTemplate; // delete it to reduce payload size.
                             }
                         }, this);
-                        u = "&updates=" + JSON.stringify(updates);
+                        u = "&updates=" + encodeURIComponent(JSON.stringify(updates));
                     }
                     if(deletes.length > 0) {
                         var id = deletes[0].attributes[this.DB_UID];
@@ -951,19 +998,23 @@ define([
                         }
                     }
 
+                    // Respect the proxyPath if one has been set (Added at v3.2.0)
+                    var url = this.proxyPath ? this.proxyPath + "?" + layer.url : layer.url;
+
                     var req = new XMLHttpRequest();
-                    req.open("POST", layer.url + "/applyEdits", true);
+                    req.open("POST", url + "/applyEdits", true);
                     req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     req.onload = function()
                     {
                         if( req.status === 200 && req.responseText !== "")
                         {
                             try {
-                                var obj = JSON.parse(this.response);
+                                // var b = this.responseText.replace(/"/g, "'"); // jshint ignore:line
+                                var obj = JSON.parse(this.responseText);
                                 callback(obj.addResults, obj.updateResults, obj.deleteResults);
                             }
                             catch(err) {
-                                console.error("EDIT REQUEST REPONSE WAS NOT SUCCESSFUL:", req);
+                                console.error("FAILED TO PARSE EDIT REQUEST RESPONSE:", req);
                                 errback("Unable to parse xhr response", req);
                             }
                         }
@@ -1173,6 +1224,57 @@ O.esri.Edit.EditStorePOLS = function () {
                 }
                 else {
                     callback(editsArray, "end");
+                }
+            }.bind(this);
+            transaction.onerror = function (err) {
+                callback(null, err);
+            };
+        }
+        else {
+            callback(null, "no db");
+        }
+    };
+
+    /*
+     * Query the database, looking for any existing Add temporary OIDs, and return the nextTempId to be used.
+     * @param feature - extended layer from offline edit advanced
+     * @param callback {int, messageString} or {null, messageString}
+     */
+    this.getNextLowestTempId = function (feature, callback) {
+        var addOIDsArray = [],
+            self = this;
+
+        if (this._db !== null) {
+
+            var fLayerJSONId = this.FEATURE_LAYER_JSON_ID;
+            var fCollectionId = this.FEATURE_COLLECTION_ID;
+
+            var transaction = this._db.transaction([this.objectStoreName])
+                .objectStore(this.objectStoreName)
+                .openCursor();
+
+            transaction.onsuccess = function (event) {
+                var cursor = event.target.result;
+                if (cursor && cursor.value && cursor.value.id) {
+                    // Make sure we are not return FeatureLayer JSON data or a Phantom Graphic
+                    if (cursor.value.id !== fLayerJSONId && cursor.value.id !== fCollectionId) {
+                        if(cursor.value.layer === feature.url && cursor.value.operation === "add"){ // check to make sure the edit is for the feature we are looking for, and that the operation is an add.
+                            addOIDsArray.push(cursor.value.graphic.attributes[self.objectId]); // add the temporary OID to the array
+                        }
+                    }
+                    cursor.continue();
+                }
+                else {
+                    if(addOIDsArray.length === 0){ // if we didn't find anything,
+                        callback(-1, "success"); // we'll start with -1
+                    }
+                    else{
+                        var filteredOIDsArray = addOIDsArray.filter(function(val){ // filter out any non numbers from the array...
+                            return !isNaN(val); // .. should anything have snuck in or returned a NaN
+                        });
+                        var lowestTempId = Math.min.apply(Math, filteredOIDsArray); // then find the lowest number from the array
+                        callback(lowestTempId-1, "success"); // and we'll start with one less than tat.
+                    }
                 }
             }.bind(this);
             transaction.onerror = function (err) {
